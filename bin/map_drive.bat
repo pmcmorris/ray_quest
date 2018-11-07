@@ -1,7 +1,7 @@
 @echo off
-echo "Mapping V: to '%CD%'"
-subst v: "%CD%"
-v:
+echo "Mapping R: to '%CD%'"
+subst r: "%CD%"
+r:
 echo "run bin\init_peter.bat"
 echo "run bin\init_patrick.bat"
 echo "run bin\init_andrew.bat"
