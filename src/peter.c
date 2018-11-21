@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "peter.h"
 #include "stb_image.h"
 #include "stb_image_write.h"
 // http://paulcuth.me.uk/netpbm-viewer/
