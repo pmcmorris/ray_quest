@@ -3,13 +3,16 @@
 #include "stb_image.h"
 #include "stb_image_write.h"
 // http://paulcuth.me.uk/netpbm-viewer/
-void save(int width, int height, void* rgb) {
+//
+void write_ppm(void* rgb, int width, int height, const char* filename) {
     size_t image_size = 3 * width * height;
 
-    FILE* f = fopen("hello.ppm", "wb");
+    FILE* f = fopen(filename, "wb");
+    // TODO: check for errors
 
     // write the file header
     fprintf(f, "P6\n%d %d\n255\n", width, height);
+
     // write the pixel data
     fwrite(rgb, 1, image_size, f);
 
@@ -17,9 +20,8 @@ void save(int width, int height, void* rgb) {
     fflush(f);
     fclose(f);
 }
-void grayScale(const unsigned char* rgbaImage, float* output, const int width, const int height, const int channels);
 
-int main() {
+int do_conversion() {
     printf("Pistol's Quest! Day 1\n");
 	int width,height,channels;
 	
@@ -79,7 +81,7 @@ int main() {
         }
     }
 	stbi_write_png("grayImage.png", width, height, channels, data, width*channels);
- //  save(width, height, image);
+    // write_ppm(image, width, height, "hello.ppm");
 	stbi_image_free(data);
     return 0;
 }
