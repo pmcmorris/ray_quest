@@ -1,6 +1,6 @@
 @echo off
 
-set C_FLAGS=-Wall -pedantic -std=c99 -g
+set C_FLAGS=-Wall -pedantic -std=c99 -g -O3
 set C_LIBS=
 ::set C_LINK=-Wl,--subsystem,windows
 set C_LINK=-Wl,--subsystem,console
