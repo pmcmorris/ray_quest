@@ -1,7 +1,7 @@
 @echo off
 
 set C_FLAGS=-Wall -pedantic -std=c99 -g -O3
-set C_LIBS=
+set C_LIBS=-l gdi32
 ::set C_LINK=-Wl,--subsystem,windows
 set C_LINK=-Wl,--subsystem,console
 
