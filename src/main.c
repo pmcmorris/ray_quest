@@ -2,24 +2,26 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#if 0
 typedef struct {
     unsigned char r;
     unsigned char g;
     unsigned char b;
     unsigned char a;
 } rgba;
+#endif
 
 typedef struct {
     unsigned char b;
     unsigned char g;
     unsigned char r;
     unsigned char a;
-} brga;
+} bgra;
 
 static BITMAPINFO g_bitmapinfo;
 static int g_width;
 static int g_height;
-static brga* g_backbuffer;
+static bgra* g_backbuffer;
 
 void WindowResize(HWND window) {
     // Delete the old backbuffer if we have one already
