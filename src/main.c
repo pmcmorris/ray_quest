@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #if 0
 typedef struct {
@@ -22,6 +23,19 @@ static BITMAPINFO g_bitmapinfo;
 static int g_width;
 static int g_height;
 static bgra* g_backbuffer;
+
+// Write a gradient to the back buffer
+void DrawGradient(int offset) {
+    for (int row = 0; row < g_height; row++) {
+        for (int col = 0; col < g_width; col++) {
+            int index = row * g_width + col;
+            g_backbuffer[index].r = (int8_t)(row + offset);
+            g_backbuffer[index].g = (int8_t)(col + offset);
+            g_backbuffer[index].b = 0;
+            g_backbuffer[index].a = 0;
+        }
+    }
+}
 
 void WindowResize(HWND window) {
     // Delete the old backbuffer if we have one already
@@ -50,39 +64,17 @@ void WindowResize(HWND window) {
     // TODO: check result
     g_backbuffer = VirtualAlloc(0, buffer_size, MEM_COMMIT, PAGE_READWRITE);
 
-    // TODO: hack in a value
-    for (int row = 0; row < g_height; row++) {
-        for (int col = 0; col < g_width; col++) {
-            int index = row * g_width + col;
-            g_backbuffer[index].r = (int8_t)row;
-            g_backbuffer[index].g = (int8_t)col;
-            g_backbuffer[index].b = 0;
-            g_backbuffer[index].a = 0;
-        }
-    }
-
-#if 0
-    uint8_t* bytes = (uint8_t*) g_backbuffer;
-
-    for (int row = 0; row < g_height; row++) {
-        for (int col = 0; col < g_width; col++) {
-            int index = (row * g_width + col) * 4;
-            bytes[index + 0] = 255;
-            bytes[index + 1] = 0;
-            bytes[index + 2] = 0;
-            bytes[index + 3] = 0;
-        }
-    }
-#endif
-
+    DrawGradient(100);
 }
 
-void CopyToBackBuffer(){
-}
-
-void WindowPaint(HWND window) {
+void WindowPaint(HWND window, bool force) {
+    HDC context;
     PAINTSTRUCT state;
-    HDC context = BeginPaint(window, &state);
+    if (force) {
+        context = GetDC(window);
+    } else {
+        context = BeginPaint(window, &state);
+    }
 #if 0
     // Painting to a window using the ancient GDI api
 	int x = state.rcPaint.left;
@@ -109,7 +101,11 @@ void WindowPaint(HWND window) {
         DIB_RGB_COLORS,
         SRCCOPY);
 #endif
-    EndPaint(window, &state);
+    if (force) {
+        ReleaseDC(window, context);
+    } else {
+        EndPaint(window, &state);
+    }
 }
 
 LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -124,7 +120,7 @@ LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lPa
 
         case WM_PAINT:
             //printf("WM_PAINT: %u\n", message);
-            WindowPaint(window);
+            WindowPaint(window, false);
             goto use_default_handler;
 
         case WM_ACTIVATEAPP:
@@ -155,6 +151,20 @@ LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lPa
             result = DefWindowProc(window, message, wParam, lParam);
     }
     return result;
+}
+
+bool ProcessAllMessages() {
+    MSG message;
+    while (PeekMessage(&message, 0, 0, 0, PM_REMOVE)) {
+
+		// Continue case
+		TranslateMessage(&message);
+		DispatchMessage(&message);
+
+		if (message.message == WM_QUIT)
+            return true;
+	}
+	return false;
 }
 
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
@@ -193,24 +203,18 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
         0);
     (void)window;
 
-    // https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-getmessage
+    // https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-peekmessagea
+    int offset = 0;
     for (;;) {
-        MSG message;
-        BOOL result = GetMessage(&message, 0, 0, 0);
-
-        if (result == 0) {
-            // TODO: Quit case
+        // handle all message triggered updates
+        if (ProcessAllMessages())
             break;
-        }
 
-        if (result == -1) {
-            // TODO: Error case
-            break;
-        }
-
-        // Continue case
-        TranslateMessage(&message);
-        DispatchMessage(&message);
+        // handle our time triggered updates
+        DrawGradient(offset);
+        WindowPaint(window, true);
+        Sleep(33); // TODO: sleep based on time remaining after processing updates
+        offset += 2;
     }
 
     return 0;
